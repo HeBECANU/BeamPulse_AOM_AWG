@@ -53,4 +53,29 @@ while ischar(tline)
 end
 fclose(fid);    % close file
 
+%% Bad attempts from log
+% % pad missing shots with repeated param (log file reports only the SUCCESSFUL
+% % shot)
+% fileid=vertcat(filemeta(:).id);
+% id_start=fileid(1);
+% id_end=fileid(end);
+% 
+% nshot=id_end-id_start+1;
+% filemeta_padded=repmat(struct('id',NaN,'datetime',NaN,'params',NaN),[nshot,1]);
+% counter=nshot;      % count down
+% tfilemeta=struct('id',NaN,'datetime',NaN,'params',NaN);
+% for ii=id_end:-1:id_start
+%     idxInLog=find(fileid==ii);
+%     if ~isempty(idxInLog)
+%         tfilemeta=filemeta(idxInLog);   % trying this param set
+%         filemeta_padded(counter)=tfilemeta;
+%     else
+%         % pad it with previously set param set
+%         filemeta_padded(counter).id=counter;
+%         filemeta_padded(counter).params=tfilemeta.params;
+%     end
+%     counter=counter-1;
+% end
+% filemeta=filemeta_padded;
+
 end
