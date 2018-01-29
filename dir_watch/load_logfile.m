@@ -1,5 +1,6 @@
-%% Load data from a log-file
-% 30/01/2017 DK Shin 
+function filemeta = load_logfile(path_to_log)
+%Load data from a log-file
+%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Log file format
 %-------------------------------
@@ -9,15 +10,16 @@
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % OUTPUT
-% filedata: a struct with fields: id, datetime, params
-%   - id is a positive integer
-%   - datetime is a char string
-%   - params is a 1D cell-array of strings
+%   filedata: a 1D struct-array with fields: id, datetime, params
+%       - id is a positive integer
+%       - datetime is a char string
+%       - params is a 1D cell-array of strings
 %
 %-------------------------------
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 30/01/2017
+% DK Shin 
 
-function filemeta = load_logfile(path_to_log)
 % check file exists
 if exist(path_to_log,'file')~=2
     error('File %s does not exist.\nEnter a valid path to log file.',path_to_log);
