@@ -7,7 +7,7 @@ function p = paramlog2array(s)
 %       datetime
 %       params
 %
-%   p: double-array
+%   p: double-array of [ID,PARAMS]
 %
 %
 %   NOTE: non-numeric params are mapped to an NaN.
