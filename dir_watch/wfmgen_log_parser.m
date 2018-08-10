@@ -4,6 +4,14 @@ function [uniq_params,id_par,shotid,Ipar] = wfmgen_log_parser(path_to_logfile)
 % 20180810
 %
 
+if isempty(path_to_logfile)||~exist(path_to_logfile,'file')
+    uniq_params=NaN;
+    id_par=[];
+    shotid=[];
+    Ipar=[];
+    return
+end
+
 % load csv as array
 %   col1 is shotID; col2.. are params-vector
 param_log=load_logfile(path_to_logfile);
