@@ -1,3 +1,6 @@
+***[David Shin](https://github.com/spicydonkey), [Bryce Henson](https://github.com/brycehenson), Roman Khakimov***   
+Matlab based GUI for He* BEC experiment basic data visualization and analysis
+
 Version 0.7
 *double_sin option for driving raman with single beam
 
