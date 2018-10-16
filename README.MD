@@ -1,5 +1,5 @@
 ***[David Shin](https://github.com/spicydonkey), [Bryce Henson](https://github.com/brycehenson), Roman Khakimov***   
-Matlab based GUI for He* BEC experiment basic data visualization and analysis
+Code for programing keysight waveform generator to produce bragg or raman pulses.
 
 Version 0.7
 *double_sin option for driving raman with single beam
