@@ -5,7 +5,7 @@ function ch_processed=ch_to_waveforms(ch_raw)
 %[type('sine','const'),freq(hz),phase(rad),duration,amplitude,sample rate,Gauss mod]
 global max_points  points_min repeats_max
 
-
+points_min=double(32);
 
 %to improve
     %if the number of repeats exceeds the max then make the sequence larger
@@ -39,7 +39,11 @@ for n=1:size(ch_raw,2)
         end
         
         t=linspace(0, n_points*dt, n_points);   
-        envelope=seg_amp*gausswin(n_points,seg_gmod).';
+        if ~isnan(seg_gmod)
+            envelope=seg_amp*gausswin(n_points,seg_gmod).';
+        else
+            envelope = seg_amp(ones(1,n_points));
+        end
         wf_out=sin(2*pi*seg_freq*t+seg_phase);    
         wf_out=wf_out.*envelope;
         PA=trapz(t, envelope);
@@ -49,6 +53,37 @@ for n=1:size(ch_raw,2)
         
 		fprintf('Pulse_area=%2.3e for duration %3.1f µs\n', PA, seg_duration*1e6)
         
+        ch_processed(seg_index).waveform=wf_out;
+        
+        %due to the intrinsic asymetery that can happen when the waveform
+        %is enveloped i add 2% to the pk-pk voltage
+        
+        ch_processed(seg_index).vpp=(max(wf_out)-min(wf_out))*1.02;
+        ch_processed(seg_index).sr=seg_sr;
+        ch_processed(seg_index).repeats=1;
+        seg_index=seg_index+1;
+        n_points_tot=n_points_tot+n_points;
+    elseif strcmp(seg_type,'sweep_sine')
+        %freq start, freq end, phase, amp, sample rate, duration
+        seg_freq_start=seg_raw{2};
+        seg_freq_end=seg_raw{3};
+        seg_phase=seg_raw{4};
+        seg_amp=seg_raw{5};
+        seg_sr=seg_raw{6}; %sample rate
+        seg_duration=seg_raw{7};
+        dt=1/seg_sr;
+        n_points=round(seg_duration/dt);
+        
+        if n_points>max_points
+            error('Requested segment length is too long\n')
+        end
+        
+        t=linspace(0, n_points*dt, n_points); 
+        freq_grad=(seg_freq_end-seg_freq_start)/seg_duration;
+        wf_out=seg_amp*sin(2*pi*(seg_freq_start+freq_grad*t).*t+seg_phase);    
+        if zero_at_end & n==size(ch_raw,2)
+            wf_out=[wf_out,0];
+        end
         ch_processed(seg_index).waveform=wf_out;
         
         %due to the intrinsic asymetery that can happen when the waveform
