@@ -1,7 +1,7 @@
 function send_segments(chanels,device)
 %this program sends the wavefrom segments to the keysight function generator and programs the
 %appropriate repeats as specified
-%ch1(1) is a data feild that has properties waveform(vector of doubles),sr(sample rate) and repeats
+%ch1(1) is a data field that has properties waveform(vector of doubles),sr(sample rate) and repeats
 
 
 %debug commands
@@ -68,7 +68,6 @@ send_sequence(instr,chanels,ARB_DIR)
 switch_on(instr)
 
 
-
 end
 
 
@@ -81,7 +80,7 @@ end
 
 function check_errors(instr)
     error_string=query(instr,':SYST:ERR?') ;
-    if isempty(strfind(error_string, '"No error"')) %&& isempty(strfind( error_string, 'value clipped to lower limit'))
+    if ~contains(error_string, '"No error"') %&& isempty(strfind( error_string, 'value clipped to lower limit'))
         error('!!!==========INSTRUMENT ERROR==========!!!\n %s---------------------------', error_string);            
     end      
 end
@@ -107,9 +106,9 @@ end
     max(wf_bin-(2^15-1))
     min(wf_bin+(2^15-1))
     %             min(wf_bin)
-    data_size=2*length(wf_bin); %one point takes up 2 int8 feilds
+    data_size=2*length(wf_bin); %one point takes up 2 int8 fields
     %definite_length_header defines the number of points in the
-    %wavefrom as #[feildwidth][data_size]
+    %wavefrom as #[fieldwidth][data_size]
     scpi_header=sprintf('DATA:ARB:DAC myArb, %s', definite_length_header(data_size));
     %increase the buffer size to handle this large wavefrom
     instr.OutputBufferSize = 8*length(scpi_header)+data_size;
@@ -236,9 +235,9 @@ end
         
         % UTILITIES:
 %definite_length_header defines the number of points in the
-%wavefrom as #[feildwidth][data_size]
+%wavefrom as #[fieldwidth][data_size]
 %eg 523 long waveform would be #3523
-%because generator is limited to 64e6 max never going to reach the 9 feild
+%because generator is limited to 64e6 max never going to reach the 9 field
 %limit of this method
 function h=definite_length_header(data_size)
     num_to_follow=length(sprintf('%i', data_size)); 

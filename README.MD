@@ -34,3 +34,8 @@ To be improved
 *integration for pulse area should follow same form as rabi phase
 *documention for user
 *combine backend functions into single matlab file
+
+
+
+## Usage
+
