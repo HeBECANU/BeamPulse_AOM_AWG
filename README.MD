@@ -1,5 +1,5 @@
 # raman_control
-***[David Shin](https://github.com/spicydonkey), [Bryce Henson](https://github.com/brycehenson), Roman Khakimov***   
+***[David Shin](https://github.com/spicydonkey), [Bryce Henson](https://github.com/brycehenson), [Jacob A. Ross](https://github.com/GroundhogState), Roman Khakimov***   
 Code for programing keysight waveform generator to produce bragg or raman pulses.
 
 Version 0.7
