@@ -50,8 +50,8 @@ end
 
 % Connect to instrument object, obj.instr.
 %instr
-fopen(instr)
-fprintf(query(instr, '*IDN?'),'\n')
+fopen(instr);
+fprintf(query(instr, '*IDN?'),'\n');
 fprintf(instr, '*CLS');
 if reset== 1
     fprintf(instr, '*RST');
@@ -64,8 +64,8 @@ end
 check_errors(instr);
 fclose(instr);
           
-send_sequence(instr,chanels,ARB_DIR)
-switch_on(instr)
+send_sequence(instr,chanels,ARB_DIR);
+switch_on(instr);
 
 
 end
@@ -103,8 +103,8 @@ end
     %Sends ASCII data and creates text .ARB file in the instruments
     %memory         
     wf_bin=int16(round(wf*(2^15-1)*2/Vpp));
-    max(wf_bin-(2^15-1))
-    min(wf_bin+(2^15-1))
+    max(wf_bin-(2^15-1));
+    min(wf_bin+(2^15-1));
     %             min(wf_bin)
     data_size=2*length(wf_bin); %one point takes up 2 int8 fields
     %definite_length_header defines the number of points in the
@@ -187,10 +187,11 @@ end
     %                 obj.check_errors() 
     
         check_errors(instr);
-        fclose(instr);                                            
+        fclose(instr);
+        fprintf('...done\n')
     end
-    fprintf('...done\n')            
-    set_run_settings_seq(instr,ARB_DIR, 'seq_CH1.seq', 'seq_CH2.seq', vpp_net(1), vpp_net(2))              
+                
+    set_run_settings_seq(instr,ARB_DIR, 'seq_CH1.seq', 'seq_CH2.seq', vpp_net(1), vpp_net(2));              
  end  
         
 function set_run_settings_seq(instr,ARB_DIR, seq1_fname, seq2_fname, Vpp1, Vpp2)              
