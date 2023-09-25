@@ -5,7 +5,7 @@ function ch_processed=ch_to_waveforms(ch_raw)
 %[type('sine','const'),freq(hz),phase(rad),duration,amplitude,sample rate,Gauss mod]
 global max_points  points_min repeats_max
 
-points_min=double(32);
+points_min=double(256);%double(16);%double(32);%double(32);
 
 %to improve
     %if the number of repeats exceeds the max then make the sequence larger
@@ -34,18 +34,29 @@ for n=1:size(ch_raw,2)
         dt=1/seg_sr;
         n_points=round(seg_duration/dt);
         
+        L = (n_points)-1;  % codegeneration special case: Ensure order is scalar
+        
+        if length(seg_raw)>7 && ~isnan(seg_raw{8})
+            seg_center = seg_raw{8}/dt;
+        else
+            seg_center = L/2;
+        end
+        
         if n_points>max_points
             error('Requested segment length is too long\n')
         end
         
         t=linspace(0, n_points*dt, n_points);   
         if ~isnan(seg_gmod)
-            envelope=seg_amp*gausswin(n_points,seg_gmod).';
+%             envelope=seg_amp*gausswin(n_points,seg_gmod).';
+%             envelope=seg_amp*chebwin(n_points,seg_gmod*50).';
+        npts = (0:(n_points-1))'-seg_center;
+        envelope=seg_amp.* exp(-(1/2).*(seg_gmod.*npts./(L/2)).^2);
         else
             envelope = seg_amp(ones(1,n_points));
         end
         wf_out=sin(2*pi*seg_freq*t+seg_phase);    
-        wf_out=wf_out.*envelope;
+        wf_out=wf_out.*envelope';
         PA=trapz(t, envelope);
         if zero_at_end & n==size(ch_raw,2)
             wf_out=[wf_out,0];
@@ -105,24 +116,56 @@ for n=1:size(ch_raw,2)
         seg_gmod2=seg_raw{9};
         seg_sr=seg_raw{10}; %sample rate
         seg_duration=seg_raw{11};
+        seg_del=seg_raw{12};%delay between pulses
+        
+        
         
         dt=1/seg_sr;
         n_points=round(seg_duration/dt);
+        n_delayed=abs(round(seg_del/dt));
 
+        L = (n_points)-1;  % codegeneration special case: Ensure order is scalar
+        
+        if length(seg_raw)>12
+            seg_center = seg_raw{13}/dt;
+        else
+            seg_center = L/2;
+        end
         
         if n_points>max_points
             error('Requested segment length is too long\n')
         end
         
-        t=linspace(0, n_points*dt, n_points);   
-        envelope1=seg_amp1*gausswin(n_points,seg_gmod1).';
-        envelope2=seg_amp2*gausswin(n_points,seg_gmod2).';
+         
+%         envelope1=seg_amp1*gausswin(n_points,seg_gmod1).';
+%         envelope2=seg_amp2*gausswin(n_points,seg_gmod2).';
         
+        n1 = (0:(n_delayed+n_points-1))'-seg_center;
+        n2 = (0:(n_delayed+n_points-1))'-seg_center-n_delayed;
+        envelope1=seg_amp1.* exp(-(1/2).*(seg_gmod1.*n1./(L/2)).^2);
+        envelope2=seg_amp2.* exp(-(1/2).*(seg_gmod1.*n2./(L/2)).^2);
+%         envelope1=seg_amp1*chebwin(n_points,seg_gmod1*50).';
+%         envelope2=seg_amp2*chebwin(n_points,seg_gmod2*50).';
+%         envelope1=seg_amp1*tukeywin(n_points,1/seg_gmod1).';
+%         envelope2=seg_amp2*tukeywin(n_points,1/seg_gmod2).';
+        t=linspace(0, (n_delayed+n_points)*dt, (n_delayed+n_points));
+%         t=linspace(0, (n_delayed+n_points)*dt, (n_delayed+n_points));  
         wf_out1=sin(2*pi*seg_freq1*t+seg_phase1);    
-        wf_out1=wf_out1.*envelope1;
+        wf_out1=wf_out1.*envelope1';
+%         if seg_del>0
+%             wf_out1=[wf_out1,zeros(1,n_delayed)];
+%         else
+%             wf_out1=[zeros(1,n_delayed),wf_out1];
+%         end
         
+%         t=linspace(0, (n_points)*dt, n_points);  
         wf_out2=sin(2*pi*seg_freq2*t+seg_phase2);    
-        wf_out2=wf_out2.*envelope2;
+        wf_out2=wf_out2.*envelope2';
+%         if seg_del>0
+%             wf_out2=[zeros(1,n_delayed),wf_out2];
+%         else
+%             wf_out2=[wf_out2,zeros(1,n_delayed)];
+%         end
         
         wf_out=wf_out1+wf_out2;
         PA=trapz(t, envelope1)+trapz(t, envelope2);
@@ -181,7 +224,38 @@ for n=1:size(ch_raw,2)
         if zero_at_end & n==size(ch_raw,2) %if this is the last segment add a zero at the end
             ch_processed(seg_index-1).waveform=[ch_processed(seg_index-1).waveform,0]
         end
+    elseif strcmp(seg_type,'arb')
+        %arbitrary waveform
+        seg_sr=seg_raw{3};
+        seg_duration=seg_raw{4};
         
+        params = [seg_raw{4:end}];
+        
+
+        dt=1/seg_sr;
+        n_points=round(seg_duration/dt);
+        wf_func = seg_raw{2};
+        
+        t=linspace(0, n_points*dt, n_points); 
+        wf_out=wf_func(params,t')';
+        
+        PA=trapz(t, wf_out);
+        if zero_at_end && n==size(ch_raw,2)
+            wf_out=[wf_out,0];
+        end
+        
+		fprintf('Pulse_area=%2.3e for duration %3.1f µs\n', PA, seg_duration*1e6)
+        
+        ch_processed(seg_index).waveform=wf_out;
+        
+        %due to the intrinsic asymetery that can happen when the waveform
+        %is enveloped i add 2% to the pk-pk voltage
+        
+        ch_processed(seg_index).vpp=(max(wf_out)-min(wf_out))*1.02;
+        ch_processed(seg_index).sr=seg_sr;
+        ch_processed(seg_index).repeats=1;
+        seg_index=seg_index+1;
+        n_points_tot=n_points_tot+n_points;
     else
         error('Unknown Waveform type\n')    
     end
