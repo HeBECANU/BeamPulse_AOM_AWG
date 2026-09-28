@@ -143,7 +143,7 @@ for n=1:size(ch_raw,2)
         n1 = (0:(n_delayed+n_points-1))'-seg_center;
         n2 = (0:(n_delayed+n_points-1))'-seg_center-n_delayed;
         envelope1=seg_amp1.* exp(-(1/2).*(seg_gmod1.*n1./(L/2)).^2);
-        envelope2=seg_amp2.* exp(-(1/2).*(seg_gmod1.*n2./(L/2)).^2);
+        envelope2=seg_amp2.* exp(-(1/2).*(seg_gmod2.*n2./(L/2)).^2);
 %         envelope1=seg_amp1*chebwin(n_points,seg_gmod1*50).';
 %         envelope2=seg_amp2*chebwin(n_points,seg_gmod2*50).';
 %         envelope1=seg_amp1*tukeywin(n_points,1/seg_gmod1).';
@@ -239,6 +239,95 @@ for n=1:size(ch_raw,2)
         t=linspace(0, n_points*dt, n_points); 
         wf_out=wf_func(params,t')';
         
+
+        PA=trapz(t, wf_out);
+        if zero_at_end && n==size(ch_raw,2)
+            wf_out=[wf_out,0];
+        end
+        
+		fprintf('Pulse_area=%2.3e for duration %3.1f µs\n', PA, seg_duration*1e6)
+        
+        ch_processed(seg_index).waveform=wf_out;
+        
+        %due to the intrinsic asymetery that can happen when the waveform
+        %is enveloped i add 2% to the pk-pk voltage
+        
+        ch_processed(seg_index).vpp=(max(wf_out)-min(wf_out))*1.02;
+        ch_processed(seg_index).sr=seg_sr;
+        ch_processed(seg_index).repeats=1;
+        seg_index=seg_index+1;
+        n_points_tot=n_points_tot+n_points;
+
+    elseif strcmp(seg_type,'floquet1')
+        %arbitrary waveform
+        seg_sr=seg_raw{3};
+        seg_duration=seg_raw{4};
+
+        seg_fcarrier=seg_raw{5};
+        seg_phase=seg_raw{8};%2*seg_raw{8}
+        seg_chirpgrad=seg_raw{9};
+        
+        params = [seg_raw{4:end}];
+        
+        dt=1/seg_sr;
+        n_points=round(seg_duration/dt);
+        envelope = seg_raw{2}; %envelope functional waveform
+        
+        t=linspace(0, n_points*dt, n_points); 
+        wf_out = [];
+        for tt=1:size(t,2)
+            time = t(tt);
+            if sign(envelope(params,time))==-1
+                wf_out = [wf_out, abs(envelope(params,time))*cos(2*pi*(seg_fcarrier-seg_chirpgrad*time)*time + seg_phase+pi)];
+            else
+                wf_out = [wf_out, abs(envelope(params,time))*cos(2*pi*(seg_fcarrier-seg_chirpgrad*time)*time + seg_phase)];
+            end
+
+        end
+        
+
+        PA=trapz(t, wf_out);
+        if zero_at_end && n==size(ch_raw,2)
+            wf_out=[wf_out,0];
+        end
+        
+		fprintf('Pulse_area=%2.3e for duration %3.1f µs\n', PA, seg_duration*1e6)
+        
+        ch_processed(seg_index).waveform=wf_out;
+        
+        %due to the intrinsic asymetery that can happen when the waveform
+        %is enveloped i add 2% to the pk-pk voltage
+        
+        ch_processed(seg_index).vpp=(max(wf_out)-min(wf_out))*1.02;
+        ch_processed(seg_index).sr=seg_sr;
+        ch_processed(seg_index).repeats=1;
+        seg_index=seg_index+1;
+        n_points_tot=n_points_tot+n_points;
+
+    elseif strcmp(seg_type,'floquet2')
+        %arbitrary waveform
+        seg_sr=seg_raw{3};
+        seg_duration=seg_raw{4};
+
+        seg_fcarrier=seg_raw{5};
+        seg_phase=seg_raw{8};%2*seg_raw{8}
+        seg_chirpgrad=seg_raw{9};
+        
+        params = [seg_raw{4:end}];
+        
+        dt=1/seg_sr;
+        n_points=round(seg_duration/dt);
+        envelope = seg_raw{2}; %envelope functional waveform
+        
+        t=linspace(0, n_points*dt, n_points); 
+        wf_out = [];
+        for tt=1:size(t,2)
+            time = t(tt);
+            wf_out = [wf_out, abs(envelope(params,time))*cos(2*pi*(seg_fcarrier-seg_chirpgrad*time)*time + seg_phase)];
+
+        end
+        
+
         PA=trapz(t, wf_out);
         if zero_at_end && n==size(ch_raw,2)
             wf_out=[wf_out,0];
